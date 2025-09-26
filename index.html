@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTML Email Table Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Simple toggle switch styles */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 24px;
+        }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #2563eb;
+        }
+        input:checked + .slider:before {
+            transform: translateX(16px);
+        }
+        /* Custom scrollbar for a better look */
+        textarea::-webkit-scrollbar {
+            width: 8px;
+        }
+        textarea::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        textarea::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+        }
+        textarea::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        input[type="color"] {
+            -webkit-appearance: none;
+            border: none;
+            padding: 0;
+        }
+        input[type="color"]::-webkit-color-swatch-wrapper {
+            padding: 0;
+        }
+        input[type="color"]::-webkit-color-swatch {
+            border: none;
+            border-radius: 0.375rem; /* rounded-md */
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <div class="container mx-auto p-4 md:p-8">
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-slate-900">HTML Email Table Generator</h1>
+            <p class="text-slate-600 mt-2">Create responsive tables with inline CSS for your email marketing campaigns.</p>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- CONTROLS PANEL -->
+            <div class="bg-white p-6 rounded-2xl shadow-lg border border-slate-200">
+                <h2 class="text-2xl font-semibold mb-6 border-b pb-4">Table Specifications</h2>
+                
+                <!-- Table Structure -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
+                    <div>
+                        <label for="tableWidth" class="block text-sm font-medium text-slate-700 mb-1">Table Width (px)</label>
+                        <input type="number" id="tableWidth" value="600" class="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                    </div>
+                     <div>
+                        <label for="cellPadding" class="block text-sm font-medium text-slate-700 mb-1">Cell Padding (px)</label>
+                        <input type="number" id="cellPadding" value="10" class="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                    </div>
+                    <div>
+                        <label for="numRows" class="block text-sm font-medium text-slate-700 mb-1">Number of Rows</label>
+                        <input type="number" id="numRows" value="4" min="1" class="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                    </div>
+                    <div>
+                        <label for="numCols" class="block text-sm font-medium text-slate-700 mb-1">Number of Columns</label>
+                        <input type="number" id="numCols" value="3" min="1" class="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                    </div>
+                </div>
+
+                <!-- Column Widths -->
+                <div id="columnWidthsContainer" class="mb-6 p-4 bg-slate-50 rounded-lg">
+                    <h3 class="text-lg font-medium text-slate-800 mb-3">Column Widths (%)</h3>
+                    <div id="columnWidths" class="grid grid-cols-2 sm:grid-cols-3 gap-4"></div>
+                </div>
+
+                <!-- Header Options -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
+                    <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                        <label for="includeHeaderRow" class="font-medium text-slate-700">Include Header Row</label>
+                        <label class="switch">
+                            <input type="checkbox" id="includeHeaderRow" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                        <label for="includeHeaderCol" class="font-medium text-slate-700">Include Header Column</label>
+                        <label class="switch">
+                            <input type="checkbox" id="includeHeaderCol">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- Styling Options -->
+                <div id="stylingOptions">
+                    <h3 class="text-xl font-semibold mb-4 border-b pb-3">Styling</h3>
+                    
+                    <!-- General Cell Styles -->
+                     <div class="p-4 bg-slate-50 rounded-lg mb-4">
+                        <h4 class="font-medium text-slate-800 mb-3">General Cells</h4>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                             <div>
+                                <label for="generalFontSize" class="block text-xs text-slate-600 mb-1">Font Size (px)</label>
+                                <input type="number" id="generalFontSize" value="14" class="w-full p-2 border border-slate-300 rounded-md">
+                            </div>
+                            <div>
+                                <label for="generalFontColor" class="block text-xs text-slate-600 mb-1">Font Color</label>
+                                <div class="flex items-center space-x-2">
+                                    <input type="color" id="generalFontColor" value="#333333" class="w-12 h-10 p-1 border border-slate-300 rounded-md cursor-pointer shrink-0">
+                                    <input type="text" id="generalFontColorHex" class="w-full p-2 border border-slate-300 rounded-md font-mono text-sm">
+                                </div>
+                            </div>
+                             <div>
+                                <label for="generalBgColor" class="block text-xs text-slate-600 mb-1">Background Color</label>
+                                <div class="flex items-center space-x-2">
+                                    <input type="color" id="generalBgColor" value="#ffffff" class="w-12 h-10 p-1 border border-slate-300 rounded-md cursor-pointer shrink-0">
+                                    <input type="text" id="generalBgColorHex" class="w-full p-2 border border-slate-300 rounded-md font-mono text-sm">
+                                </div>
+                            </div>
+                            <div>
+                                <label for="borderColor" class="block text-xs text-slate-600 mb-1">Border Color</label>
+                                <div class="flex items-center space-x-2">
+                                    <input type="color" id="borderColor" value="#dddddd" class="w-12 h-10 p-1 border border-slate-300 rounded-md cursor-pointer shrink-0">
+                                    <input type="text" id="borderColorHex" class="w-full p-2 border border-slate-300 rounded-md font-mono text-sm">
+                                </div>
+                            </div>
+                            <div class="col-span-1 sm:col-span-2">
+                                <label for="textAlign" class="block text-xs text-slate-600 mb-1">Text Align</label>
+                                <select id="textAlign" class="w-full p-2 border border-slate-300 rounded-md bg-white">
+                                    <option value="left">Left</option>
+                                    <option value="center">Center</option>
+                                    <option value="right">Right</option>
+                                </select>
+                            </div>
+                            <div class="col-span-2">
+                                <label for="generalFontFamily" class="block text-xs text-slate-600 mb-1">Font Family</label>
+                                <input type="text" id="generalFontFamily" value="Arial, 'Helvetica Neue', Helvetica, sans-serif" class="w-full p-2 border border-slate-300 rounded-md">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Header Row Styles -->
+                    <div id="headerRowStyles" class="p-4 bg-slate-50 rounded-lg mb-4">
+                         <h4 class="font-medium text-slate-800 mb-3">Header Row</h4>
+                        <div class="grid grid-cols-2 gap-4">
+                             <div>
+                                <label for="headerRowFontSize" class="block text-xs text-slate-600 mb-1">Font Size (px)</label>
+                                <input type="number" id="headerRowFontSize" value="16" class="w-full p-2 border border-slate-300 rounded-md">
+                            </div>
+                            <div>
+                                <label for="headerRowTextColor" class="block text-xs text-slate-600 mb-1">Text Color</label>
+                                <div class="flex items-center space-x-2">
+                                    <input type="color" id="headerRowTextColor" value="#ffffff" class="w-12 h-10 p-1 border border-slate-300 rounded-md cursor-pointer shrink-0">
+                                    <input type="text" id="headerRowTextColorHex" class="w-full p-2 border border-slate-300 rounded-md font-mono text-sm">
+                                </div>
+                            </div>
+                            <div class="col-span-2">
+                                <label for="headerRowColor" class="block text-xs text-slate-600 mb-1">Background Color</label>
+                                <div class="flex items-center space-x-2">
+                                    <input type="color" id="headerRowColor" value="#2563eb" class="w-12 h-10 p-1 border border-slate-300 rounded-md cursor-pointer shrink-0">
+                                    <input type="text" id="headerRowColorHex" class="w-full p-2 border border-slate-300 rounded-md font-mono text-sm">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Header Column Styles -->
+                    <div id="headerColStyles" class="hidden p-4 bg-slate-50 rounded-lg">
+                         <h4 class="font-medium text-slate-800 mb-3">Header Column</h4>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label for="headerColFontSize" class="block text-xs text-slate-600 mb-1">Font Size (px)</label>
+                                <input type="number" id="headerColFontSize" value="16" class="w-full p-2 border border-slate-300 rounded-md">
+                            </div>
+                             <div>
+                                <label for="headerColTextColor" class="block text-xs text-slate-600 mb-1">Text Color</label>
+                                <div class="flex items-center space-x-2">
+                                    <input type="color" id="headerColTextColor" value="#ffffff" class="w-12 h-10 p-1 border border-slate-300 rounded-md cursor-pointer shrink-0">
+                                    <input type="text" id="headerColTextColorHex" class="w-full p-2 border border-slate-300 rounded-md font-mono text-sm">
+                                </div>
+                            </div>
+                            <div class="col-span-2">
+                                <label for="headerColColor" class="block text-xs text-slate-600 mb-1">Background Color</label>
+                                <div class="flex items-center space-x-2">
+                                    <input type="color" id="headerColColor" value="#475569" class="w-12 h-10 p-1 border border-slate-300 rounded-md cursor-pointer shrink-0">
+                                    <input type="text" id="headerColColorHex" class="w-full p-2 border border-slate-300 rounded-md font-mono text-sm">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- OUTPUT PANEL -->
+            <div class="space-y-8">
+                <!-- Preview -->
+                <div class="bg-white p-6 rounded-2xl shadow-lg border border-slate-200">
+                    <h2 class="text-2xl font-semibold mb-4">Live Preview</h2>
+                    <div id="preview" class="w-full bg-slate-100 p-4 rounded-lg overflow-x-auto">
+                        <!-- Generated table will be injected here -->
+                    </div>
+                </div>
+                <!-- Code Output -->
+                <div class="bg-white p-6 rounded-2xl shadow-lg border border-slate-200">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-2xl font-semibold">Generated Code</h2>
+                        <button id="copyButton" class="bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700 active:bg-blue-800 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
+                           Copy HTML
+                        </button>
+                    </div>
+                    <textarea id="output" class="w-full h-96 p-4 border border-slate-300 rounded-md bg-slate-900 text-slate-100 font-mono text-sm resize-none" readonly></textarea>
+                    <p id="copy-success" class="text-green-600 text-sm mt-2 opacity-0 transition-opacity">Copied to clipboard!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            let cellContents = {}; // Object to store the content of each cell
+
+            // Get all input elements
+            const inputs = {
+                tableWidth: document.getElementById('tableWidth'),
+                cellPadding: document.getElementById('cellPadding'),
+                numRows: document.getElementById('numRows'),
+                numCols: document.getElementById('numCols'),
+                includeHeaderRow: document.getElementById('includeHeaderRow'),
+                includeHeaderCol: document.getElementById('includeHeaderCol'),
+                headerRowColor: document.getElementById('headerRowColor'),
+                headerColColor: document.getElementById('headerColColor'),
+                headerRowTextColor: document.getElementById('headerRowTextColor'),
+                headerColTextColor: document.getElementById('headerColTextColor'),
+                headerRowFontSize: document.getElementById('headerRowFontSize'),
+                headerColFontSize: document.getElementById('headerColFontSize'),
+                generalFontSize: document.getElementById('generalFontSize'),
+                generalFontColor: document.getElementById('generalFontColor'),
+                generalBgColor: document.getElementById('generalBgColor'),
+                borderColor: document.getElementById('borderColor'),
+                textAlign: document.getElementById('textAlign'),
+                generalFontFamily: document.getElementById('generalFontFamily'),
+                columnWidthsContainer: document.getElementById('columnWidthsContainer'),
+                columnWidthsDiv: document.getElementById('columnWidths'),
+                headerRowStyles: document.getElementById('headerRowStyles'),
+                headerColStyles: document.getElementById('headerColStyles'),
+                preview: document.getElementById('preview'),
+                output: document.getElementById('output'),
+                copyButton: document.getElementById('copyButton'),
+                copySuccess: document.getElementById('copy-success')
+            };
+
+            // This function ONLY generates the HTML string based on current settings and cell contents.
+            // It does not interact with the DOM itself.
+            function generateCodeString() {
+                const numCols = parseInt(inputs.numCols.value, 10);
+                const numRows = parseInt(inputs.numRows.value, 10);
+                const tableWidth = inputs.tableWidth.value;
+                const cellPadding = inputs.cellPadding.value;
+                const hasHeaderRow = inputs.includeHeaderRow.checked;
+                const hasHeaderCol = inputs.includeHeaderCol.checked;
+                
+                // Get styling values
+                const styles = {
+                    headerRowBg: inputs.headerRowColor.value,
+                    headerColBg: inputs.headerColColor.value,
+                    headerRowText: inputs.headerRowTextColor.value,
+                    headerColText: inputs.headerColTextColor.value,
+                    headerRowFont: inputs.headerRowFontSize.value,
+                    headerColFont: inputs.headerColFontSize.value,
+                    generalFont: inputs.generalFontSize.value,
+                    generalText: inputs.generalFontColor.value,
+                    generalBg: inputs.generalBgColor.value,
+                    borderColor: inputs.borderColor.value,
+                    textAlign: inputs.textAlign.value,
+                    fontFamily: inputs.generalFontFamily.value
+                };
+
+                let tableHtml = `<!--[if mso]>\n<table role="presentation" border="0" cellspacing="0" cellpadding="0" align="center" width="${tableWidth}" style="width:${tableWidth}px;">\n<tr>\n<td>\n<![endif]-->\n`;
+                
+                tableHtml += `<table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="border-collapse: collapse; max-width: ${tableWidth}px;">\n`;
+                
+                // Collect column widths
+                const colWidths = [];
+                for (let i = 0; i < numCols; i++) {
+                    const widthInput = document.getElementById(`colWidth${i}`);
+                    colWidths.push(widthInput ? widthInput.value : (100 / numCols));
+                }
+
+                for (let r = 0; r < numRows; r++) {
+                    tableHtml += '  <tr>\n';
+                    for (let c = 0; c < numCols; c++) {
+                        const cellId = `cell-${r}-${c}`;
+                        const isHeaderRowCell = hasHeaderRow && r === 0;
+                        const isHeaderColCell = hasHeaderCol && c === 0;
+                        const cellTag = (isHeaderRowCell || isHeaderColCell) ? 'th' : 'td';
+
+                        let style = `width: ${colWidths[c]}%; padding: ${cellPadding}px; border: 1px solid ${styles.borderColor}; text-align: ${styles.textAlign}; font-family: ${styles.fontFamily};`;
+                        let pStyle = `margin: 0; font-family: ${styles.fontFamily};`;
+
+                        if (isHeaderRowCell) {
+                            style += ` background-color: ${styles.headerRowBg}; color: ${styles.headerRowText}; font-size: ${styles.headerRowFont}px; font-weight: bold;`;
+                            pStyle += ` color: ${styles.headerRowText}; font-size: ${styles.headerRowFont}px;`;
+                        } else if (isHeaderColCell) {
+                             style += ` background-color: ${styles.headerColBg}; color: ${styles.headerColText}; font-size: ${styles.headerColFont}px; font-weight: bold;`;
+                            pStyle += ` color: ${styles.headerColText}; font-size: ${styles.headerColFont}px;`;
+                        } else {
+                            style += ` background-color: ${styles.generalBg}; color: ${styles.generalText}; font-size: ${styles.generalFont}px;`;
+                            pStyle += ` color: ${styles.generalText}; font-size: ${styles.generalFont}px;`;
+                        }
+                        
+                        // Use stored content if it exists, otherwise use a default
+                        let cellContent = `Cell ${r + 1},${c + 1}`;
+                        if (isHeaderRowCell) cellContent = `Header ${c+1}`;
+                        if (isHeaderColCell && !isHeaderRowCell) cellContent = `Row Header ${r+1}`;
+                        if(isHeaderColCell && isHeaderRowCell) cellContent = "Header";
+
+                        // If no user-entered content, set the default
+                        if (!cellContents[cellId]) {
+                            cellContents[cellId] = cellContent;
+                        }
+
+                        tableHtml += `    <${cellTag} style="${style}">\n`;
+                        tableHtml += `      <p style="${pStyle}">${cellContents[cellId]}</p>\n`;
+                        tableHtml += `    </${cellTag}>\n`;
+                    }
+                    tableHtml += '  </tr>\n';
+                }
+
+                tableHtml += '</table>\n';
+                tableHtml += `<!--[if mso]>\n</td>\n</tr>\n</table>\n<![endif]-->`;
+                
+                return tableHtml;
+            }
+
+            // Function to handle direct text input into preview cells
+            function handleCellInput(e) {
+                const pElement = e.target;
+                if (pElement && pElement.hasAttribute('contenteditable')) {
+                    const cellId = pElement.id;
+                    cellContents[cellId] = pElement.innerText;
+                    // Only update the code output, not the preview, to avoid losing focus
+                    inputs.output.value = generateCodeString();
+                }
+            }
+
+            // This is the main update function. It redraws the preview and updates the code.
+            // It should be called for any change EXCEPT for live typing in a cell.
+            function updateAll() {
+                const tableHtml = generateCodeString();
+                inputs.preview.innerHTML = tableHtml;
+                inputs.output.value = tableHtml;
+
+                // Add contenteditable attributes to the new preview cells
+                const numRows = parseInt(inputs.numRows.value, 10);
+                const numCols = parseInt(inputs.numCols.value, 10);
+                for (let r = 0; r < numRows; r++) {
+                    for (let c = 0; c < numCols; c++) {
+                        const cellId = `cell-${r}-${c}`;
+                        // The structure is table > tbody > tr > th/td > p
+                        const pElement = inputs.preview.querySelector(`tr:nth-child(${r+1}) > *:nth-child(${c+1}) > p`);
+                        if (pElement) {
+                            pElement.setAttribute('contenteditable', 'true');
+                            pElement.setAttribute('id', cellId);
+                        }
+                    }
+                }
+            }
+
+
+            // Function to manage column width inputs
+            function updateColumnWidthInputs() {
+                const numCols = parseInt(inputs.numCols.value, 10);
+                inputs.columnWidthsDiv.innerHTML = '';
+                if (numCols > 0) {
+                     inputs.columnWidthsContainer.style.display = 'block';
+                    const defaultWidth = (100 / numCols).toFixed(2);
+                    for (let i = 0; i < numCols; i++) {
+                        const colDiv = document.createElement('div');
+                        colDiv.innerHTML = `
+                            <label for="colWidth${i}" class="block text-xs font-medium text-slate-600 mb-1">Col ${i + 1}</label>
+                            <input type="number" id="colWidth${i}" value="${defaultWidth}" min="0" step="0.1" class="w-full p-2 border border-slate-300 rounded-md focus:ring-1 focus:ring-blue-500">
+                        `;
+                        inputs.columnWidthsDiv.appendChild(colDiv);
+                        document.getElementById(`colWidth${i}`).addEventListener('input', updateAll);
+                    }
+                } else {
+                     inputs.columnWidthsContainer.style.display = 'none';
+                }
+            }
+
+            // Function to toggle visibility of style sections
+            function toggleStyleSections() {
+                inputs.headerRowStyles.style.display = inputs.includeHeaderRow.checked ? 'block' : 'none';
+                inputs.headerColStyles.style.display = inputs.includeHeaderCol.checked ? 'block' : 'none';
+            }
+
+            // Function to sync a color picker with a text input for hex codes
+            function setupColorSync(colorInputId, hexInputId) {
+                const colorInput = document.getElementById(colorInputId);
+                const hexInput = document.getElementById(hexInputId);
+
+                // Set initial hex value from the color picker's default
+                hexInput.value = colorInput.value;
+
+                colorInput.addEventListener('input', () => {
+                    hexInput.value = colorInput.value;
+                    updateAll();
+                });
+
+                hexInput.addEventListener('input', () => {
+                    const hexValue = hexInput.value;
+                    // Basic validation for 3 or 6 digit hex codes
+                    if (/^#([0-9A-F]{3}){1,2}$/i.test(hexValue)) {
+                        colorInput.value = hexValue;
+                        updateAll();
+                    }
+                });
+            }
+            
+            // Event Listeners for all inputs
+            Object.values(inputs).forEach(input => {
+                // Only attach update listeners to actual form elements, not color pickers or containers.
+                if ((input.tagName === 'INPUT' || input.tagName === 'SELECT') && input.type !== 'color') {
+                     const eventType = (input.tagName === 'SELECT' || input.type === 'checkbox') ? 'change' : 'input';
+                     input.addEventListener(eventType, updateAll);
+                }
+            });
+
+             // Sync color pickers with hex input fields
+            const colorPairs = [
+                ['generalFontColor', 'generalFontColorHex'],
+                ['generalBgColor', 'generalBgColorHex'],
+                ['borderColor', 'borderColorHex'],
+                ['headerRowTextColor', 'headerRowTextColorHex'],
+                ['headerRowColor', 'headerRowColorHex'],
+                ['headerColTextColor', 'headerColTextColorHex'],
+                ['headerColColor', 'headerColColorHex'],
+            ];
+            colorPairs.forEach(([colorId, hexId]) => setupColorSync(colorId, hexId));
+
+            // Add a single, delegated event listener for cell content editing
+            inputs.preview.addEventListener('input', handleCellInput);
+
+            // Special listeners for row/col changes to reset content
+            ['numRows', 'numCols'].forEach(id => {
+                inputs[id].addEventListener('input', () => {
+                    cellContents = {}; // Reset content when table structure changes
+                    if (id === 'numCols') {
+                        updateColumnWidthInputs();
+                    }
+                    updateAll();
+                });
+            });
+            
+            inputs.includeHeaderRow.addEventListener('change', toggleStyleSections);
+            inputs.includeHeaderCol.addEventListener('change', toggleStyleSections);
+
+
+            // Copy to clipboard functionality
+            inputs.copyButton.addEventListener('click', () => {
+                inputs.output.select();
+                // Using document.execCommand for broader browser support in snippets like this
+                // In a full web app, navigator.clipboard.writeText would be preferred.
+                document.execCommand('copy');
+                inputs.copySuccess.style.opacity = '1';
+                setTimeout(() => {
+                    inputs.copySuccess.style.opacity = '0';
+                }, 2000);
+            });
+
+            // Initial setup
+            updateColumnWidthInputs();
+            toggleStyleSections();
+            updateAll();
+        });
+    </script>
+</body>
+</html>
+
